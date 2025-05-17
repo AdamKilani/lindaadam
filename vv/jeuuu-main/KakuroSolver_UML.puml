@@ -1,0 +1,124 @@
+@startuml KakuroSolver_Complete_UML
+skinparam classAttributeIconSize 0
+
+' ==== Packages ====
+package "Modèle du Jeu" {
+  package "Cases" {
+    class Case <<abstract>> {
+      #valeur : int
+      --
+      +getValeur() : int
+      +afficher() : void
+      +estModifiable() : bool
+    }
+    
+    class CaseNoire {
+      +afficher() : void
+      +estModifiable() : bool
+    }
+    
+    class CaseVide {
+      +setValeur(v:int) : void
+      +afficher() : void
+      +estModifiable() : bool
+    }
+    
+    class CaseFixe {
+      +afficher() : void
+      +estModifiable() : bool
+    }
+    
+    class CaseIndication {
+      -sommeDroite : int
+      -sommeBas : int
+      -casesDroite : Case*[]
+      -casesBas : Case*[]
+      -combinaisonsValides : set<set<int>>
+      --
+      +getSommeDroite() : int
+      +getSommeBas() : int
+      +getCombinaisonsValides() : set<set<int>>
+      +ajouterCaseHorizontale(c:Case*) : void
+      +ajouterCaseVerticale(c:Case*) : void
+      +genererCombinaisons() : void
+    }
+  }
+
+  class Grille {
+    -lignes : int
+    -colonnes : int
+    -cases : Case*[][]
+    --
+    +getLignes() : int
+    +getColonnes() : int
+    +getCase(i:int, j:int) : Case*
+    +setCase(i:int, j:int, c:Case*) : void
+    +afficherGrille() : void
+    +lierBlocs() : void
+    +genererToutesCombinaisons() : void
+  }
+}
+
+package "Chargement" <<Frame>> {
+  abstract class Chargeur <<abstract>> {
+    +chargerGrille(chemin:string) : Grille*
+  }
+  
+  class ChargeurFormatTexte {
+    +chargerDepuisFichier(chemin:string) : Grille*
+  }
+  
+  class ChargeurFormatJSON {
+    +chargerDepuisFichier(chemin:string) : Grille*
+  }
+  
+  class ChargeurInteraction {
+    +chargerDepuisConsole() : Grille*
+  }
+  
+  class ChargeurFactory {
+    +creerChargeur(type:string) : Chargeur*
+  }
+}
+
+package "Solveur" <<Frame>> {
+  class SolveurKakuro {
+    +resoudre(g:Grille*) : bool
+  }
+  
+  class UtilitaireSolveur {
+    +trouverCasesVides(g:Grille*, vides:vector<Coord>) : void
+    +verifierBlocParCombi(bloc:vector<Case*>, sommeCible:int, i:int, j:int, val:int) : bool
+  }
+  
+  class Coord {
+    -i : int
+    -j : int
+    +getI() : int
+    +getJ() : int
+  }
+}
+
+' ==== Relations ====
+Grille "1" *-- "*" Case : contient >
+Case <|-- CaseNoire
+Case <|-- CaseVide
+Case <|-- CaseFixe
+Case <|-- CaseIndication
+
+Chargeur <|-- ChargeurFormatTexte
+Chargeur <|-- ChargeurFormatJSON
+Chargeur <|-- ChargeurInteraction
+ChargeurFactory --> Chargeur : «create» >
+
+SolveurKakuro --> Grille : utilise >
+SolveurKakuro --> UtilitaireSolveur
+UtilitaireSolveur --> Coord
+CaseIndication --> Case : «link» >
+
+' ==== Notes ====
+note top of Grille : "Gère la grille de jeu\net les relations entre cases"
+note bottom of ChargeurFactory : "Implémente le Design Pattern\nFactory pour le chargement"
+note right of SolveurKakuro : "Algorithme de backtracking\npour résoudre la grille"
+
+@enduml
